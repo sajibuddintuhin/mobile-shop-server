@@ -10,8 +10,6 @@ app.use(cors());
 app.use(express.json());
 
 //
-// brindUseer
-// KzfzO7i0Lsk1KgVV
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.moxan1v.mongodb.net/?retryWrites=true&w=majority`;
 
@@ -30,6 +28,16 @@ async function run() {
     await client.connect();
     //
     const products = client.db("ProductBD").collection("product");
+    const Category = client.db("ProductBD").collection("Categories");
+    const addCarts = client.db("ProductBD").collection("productCart");
+
+    // Category
+
+    app.get("/Category", async (req, res) => {
+      const category = Category.find();
+      const result = await category.toArray();
+      res.send(result);
+    });
 
     // add product information
 
@@ -78,7 +86,28 @@ async function run() {
       };
       const result = await products.updateOne(query, update, options);
       res.send(result);
-      console.log(query, product);
+    });
+
+    // add to card
+
+    app.get("/addCart/:email", async (req, res) => {
+      const email = req.params.email;
+      const query = addCarts.find({ email: email });
+      const result = await query.toArray();
+      res.send(result);
+    });
+
+    app.post("/addCart", async (req, res) => {
+      const product = req.body;
+      const result = await addCarts.insertOne(product);
+      res.send(result);
+    });
+
+    app.delete("/addCart/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await addCarts.deleteOne(query);
+      res.send(result);
     });
 
     // Send a ping to confirm a successful connection
